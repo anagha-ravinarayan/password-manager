@@ -75,14 +75,11 @@ def search_credentials():
     try:
         with open("data.json", mode="r") as file:
             data = json.load(file)
-            creds = data.get(website.lower())
-    except FileNotFoundError:
+            creds = data[website.lower()]
+    except (FileNotFoundError, KeyError):
         messagebox.showinfo(title="Error", message="No saved credentials exist for this website.")
     else:
-        if creds is None:
-            messagebox.showinfo(title="Error", message="No saved credentials exist for this website.")
-        else:
-            messagebox.showinfo(title="Details", message=f"Username: {creds.get('username')} \nPassword: {creds.get('password')}")
+        messagebox.showinfo(title="Details", message=f"Username: {creds.get('username')} \nPassword: {creds.get('password')}")
 
 
 # ---------------------------- UI SETUP ------------------------------- #
