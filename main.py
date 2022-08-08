@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 import random
+import json
 
 CANVAS_WIDTH = 200
 CANVAS_HEIGHT = 200
@@ -44,14 +45,47 @@ def save():
     is_ok = messagebox.askokcancel(title=website, message=f"These are the details entered: \nWebsite: {website} \nUsername: {username} \nPassword: {password} \nIs it OK to save?")
 
     if is_ok:
-        with open("data.txt", mode="a") as file:
-            file.write(f"\n{website} | {username} | {password}")
+        new_data = {
+            website.lower(): {
+                "username": username,
+                "password": password
+            }
+        }
+        try:
+            with open("data.json", mode="r") as file:
+                data = json.load(file)
+                data.update(new_data)
+        except FileNotFoundError:
+            data = new_data
+        with open("data.json", mode="w") as file:
+            json.dump(data, file, indent=4)
+
         website_input.delete(0, END)
         password_input.delete(0, END)
 
 
-# ---------------------------- UI SETUP ------------------------------- #
+# ------------------------ SEARCH CREDENTIALS ------------------------- #
+def search_credentials():
+    website = website_input.get()
 
+    if len(website) == 0:
+        messagebox.showinfo(title="Error", message="Please enter website name.")
+        return
+
+    try:
+        with open("data.json", mode="r") as file:
+            data = json.load(file)
+            creds = data.get(website.lower())
+    except FileNotFoundError:
+        messagebox.showinfo(title="Error", message="No saved credentials exist for this website.")
+    else:
+        if creds is None:
+            messagebox.showinfo(title="Error", message="No saved credentials exist for this website.")
+        else:
+            messagebox.showinfo(title="Details", message=f"Username: {creds.get('username')} \nPassword: {creds.get('password')}")
+
+
+# ---------------------------- UI SETUP ------------------------------- #
 window = Tk()
 window.title("Password Manager")
 window.config(padx=WINDOW_PADDING, pady=WINDOW_PADDING, bg=WHITE)
@@ -64,9 +98,12 @@ canvas.grid(row=0, column=1)
 website_label = Label(text="Website: ", bg=WHITE)
 website_label.grid(row=1, column=0)
 
-website_input = Entry(width=38, highlightbackground=WHITE)
-website_input.grid(row=1, column=1, columnspan=2)
+website_input = Entry(width=21, highlightbackground=WHITE)
+website_input.grid(row=1, column=1)
 website_input.focus()
+
+generate_pw_button = Button(text="Search", highlightbackground=WHITE, command=search_credentials, width=13)
+generate_pw_button.grid(row=1, column=2)
 
 username_label = Label(text="Username / Email: ", bg=WHITE)
 username_label.grid(row=2, column=0)
